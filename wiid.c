@@ -6,10 +6,12 @@
 #include <android/log.h>
 #include <cwiid.h>
 
-#define LOG_TAG "wiidemo"
+#define LOG_TAG "wiid"
 #define LOG_NDEBUG 0
-
 #include <cutils/log.h>
+
+#include <wii_input.h>
+#include <wii_acc.h>
 
 cwiid_mesg_callback_t cwiid_callback;
 
@@ -45,11 +47,12 @@ int main(int argc, char *argv[])
 	cwiid_wiimote_t *wiimote;	/* wiimote handle */
 	struct cwiid_state state;	/* wiimote state */
 	bdaddr_t bdaddr;	/* bluetooth device address */
+	int rc;
+
 	unsigned char mesg = 0;
 	unsigned char led_state = 0;
 	unsigned char rpt_mode = 0;
 	unsigned char rumble = 0;
-	int exit = 0;
 
 	cwiid_set_err(err);
 
@@ -59,6 +62,12 @@ int main(int argc, char *argv[])
 	}
 	else {
 		bdaddr = *BDADDR_ANY;
+	}
+
+	/* Init input subsystem */
+	if (0 > (rc = wii_input_init())) {
+		LOGE("Couldn't setup wii_input\n");
+		exit(-1);
 	}
 
 	/* Connect to the wiimote */
@@ -87,11 +96,12 @@ int main(int argc, char *argv[])
 	set_rpt_mode(wiimote, rpt_mode);
 
 	/* toggle acc info */
+	/*
 	toggle_bit(rpt_mode, CWIID_RPT_ACC);
 	set_rpt_mode(wiimote, rpt_mode);
+	*/
 
-
-	while (!exit) {
+	while (1) {
 		toggle_bit(led_state, CWIID_LED1_ON);
 		set_led_state(wiimote, led_state);
 		sleep(1);
@@ -129,16 +139,6 @@ void set_rpt_mode(cwiid_wiimote_t *wiimote, unsigned char rpt_mode)
 	if (cwiid_set_rpt_mode(wiimote, rpt_mode)) {
 		LOGE("Error setting report mode\n");
 	}
-}
-
-void handle_buttons(uint16_t btn)
-{
-	LOGV("Button report: buttons = %.4X\n", btn);
-}
-
-void handle_accelerometer(uint8_t x, uint8_t y, uint8_t z)
-{
-	LOGV("Acc message [%d, %d, %d]\n", x, y, z);
 }
 
 void print_state(struct cwiid_state *state)
@@ -243,7 +243,7 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
 		switch (mesg[i].type) {
 
 		case CWIID_MESG_BTN:
-			handle_buttons(mesg[i].btn_mesg.buttons);
+			wii_handle_buttons(mesg[i].btn_mesg.buttons);
 			break;
 		case CWIID_MESG_ACC:
 			handle_accelerometer(

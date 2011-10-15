@@ -19,11 +19,12 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_SRC_FILES:= wiidemo.c
-LOCAL_MODULE := wiidemo
+LOCAL_SRC_FILES:= wiid.c wii_input.c wii_acc.c
+LOCAL_MODULE := wiid
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH) external/bluetooth/bluez/lib
-LOCAL_C_INCLUDES += $(LOCAL_PATH) external/libcwiid
+LOCAL_C_INCLUDES += $(LOCAL_PATH)
+LOCAL_C_INCLUDES += external/bluetooth/bluez/lib
+LOCAL_C_INCLUDES += external/libcwiid
 
 LOCAL_SHARED_LIBRARIES := libc libcutils liblog libcwiid libbluetooth
 
