@@ -22,7 +22,7 @@ cwiid_mesg_callback_t cwiid_callback;
 	       ? ((bf) & ~(b))	\
 	       : ((bf) | (b))
 
-void set_led_state(cwiid_wiimote_t *wiimote, unsigned char led_state);
+int set_led_state(cwiid_wiimote_t *wiimote, unsigned char led_state);
 void set_rpt_mode(cwiid_wiimote_t *wiimote, unsigned char rpt_mode);
 void print_state(struct cwiid_state *state);
 
@@ -70,6 +70,12 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
+	/* Init input subsystem */
+	if (0 > (rc = wii_acc_init())) {
+		LOGE("Couldn't setup wii_acc\n");
+		exit(-1);
+	}
+
 	/* Connect to the wiimote */
 	while (1) {
 		LOGV("Put wiimote in discoverable mode now (press 1+2)...\n");
@@ -88,7 +94,7 @@ int main(int argc, char *argv[])
 
 	/* request messages from WiiRemote */
 	if (cwiid_enable(wiimote, CWIID_FLAG_MESG_IFC)) {
-		LOGE(stderr, "Error enabling messages\n");
+		LOGE("Error enabling messages\n");
 	}
 
 	/* toggle buttons info */
@@ -96,12 +102,10 @@ int main(int argc, char *argv[])
 	set_rpt_mode(wiimote, rpt_mode);
 
 	/* toggle acc info */
-	/*
 	toggle_bit(rpt_mode, CWIID_RPT_ACC);
 	set_rpt_mode(wiimote, rpt_mode);
-	*/
 
-	while (1) {
+	do {
 		toggle_bit(led_state, CWIID_LED1_ON);
 		set_led_state(wiimote, led_state);
 		sleep(1);
@@ -115,9 +119,10 @@ int main(int argc, char *argv[])
 		sleep(1);
 
 		toggle_bit(led_state, CWIID_LED4_ON);
-		set_led_state(wiimote, led_state);
+		rc = set_led_state(wiimote, led_state);
 		sleep(1);
-	}
+
+	} while (rc != -1);
 
 	if (cwiid_close(wiimote)) {
 		LOGE("Error on wiimote disconnect\n");
@@ -127,11 +132,14 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void set_led_state(cwiid_wiimote_t *wiimote, unsigned char led_state)
+int set_led_state(cwiid_wiimote_t *wiimote, unsigned char led_state)
 {
 	if (cwiid_set_led(wiimote, led_state)) {
 		LOGE("Error setting LEDs \n");
+		return -1;
 	}
+
+	return 0;
 }
 
 void set_rpt_mode(cwiid_wiimote_t *wiimote, unsigned char rpt_mode)
@@ -246,7 +254,7 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
 			wii_handle_buttons(mesg[i].btn_mesg.buttons);
 			break;
 		case CWIID_MESG_ACC:
-			handle_accelerometer(
+			wii_handle_accelerometer(
                 		mesg[i].acc_mesg.acc[CWIID_X],
 				mesg[i].acc_mesg.acc[CWIID_Y],
 				mesg[i].acc_mesg.acc[CWIID_Z]
