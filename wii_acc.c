@@ -14,9 +14,17 @@
 
 #include <wii_acc.h>
 
+#ifdef ANDROID
+
 #define LOG_TAG "wiid_acc"
 #define LOG_NDEBUG 0
 #include <cutils/log.h>
+
+#else
+
+#include <wii_log.h>
+
+#endif /* ANDROID */
 
 #define UINPUT_DEV	"/dev/uinput"
 

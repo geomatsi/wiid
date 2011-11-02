@@ -3,12 +3,20 @@
 #include <stdlib.h>
 
 #include <bluetooth/bluetooth.h>
-#include <android/log.h>
 #include <cwiid.h>
+
+#ifdef ANDROID
 
 #define LOG_TAG "wiid"
 #define LOG_NDEBUG 0
 #include <cutils/log.h>
+#include <android/log.h>
+
+#else
+
+#include <wii_log.h>
+
+#endif
 
 #include <wii_input.h>
 #include <wii_acc.h>
@@ -31,7 +39,7 @@ cwiid_err_t err;
 void err(cwiid_wiimote_t *wiimote, const char *s, va_list ap)
 {
 
-
+#ifdef ANDROID
 	if (wiimote)
 	        __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%d:", cwiid_get_id(wiimote));
 	else
@@ -40,6 +48,9 @@ void err(cwiid_wiimote_t *wiimote, const char *s, va_list ap)
 
 	__android_log_vprint(ANDROID_LOG_ERROR, LOG_TAG, s, ap);
 	__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "\n");
+#else
+	vfprintf(stderr, s, ap);
+#endif /* ANDROID */
 }
 
 int main(int argc, char *argv[])
