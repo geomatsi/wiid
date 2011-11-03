@@ -2,9 +2,10 @@
 #
 #
 
+CWIID_PATH = ${HOME}/code/cwiid/libcwiid
 
-CWIID_STATIC_LIB = ${HOME}/code/cwiid/libcwiid/libcwiid.a
-CWIID_INCLUDE = ${HOME}/code/cwiid/libcwiid
+CWIID_STATIC_LIB = ${CWIID_PATH}/libcwiid.a
+CWIID_INCLUDE = ${CWIID_PATH}
 
 LIB=-lbluetooth -lpthread -lrt
 
