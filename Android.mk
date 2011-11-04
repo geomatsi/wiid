@@ -24,7 +24,7 @@ LOCAL_MODULE := wiid
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 LOCAL_C_INCLUDES += external/bluetooth/bluez/lib
-LOCAL_C_INCLUDES += external/libcwiid
+LOCAL_C_INCLUDES += external/cwiid/libcwiid
 
 LOCAL_SHARED_LIBRARIES := libc libcutils liblog libcwiid libbluetooth
 
