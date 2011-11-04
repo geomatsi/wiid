@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <time.h>
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -29,6 +30,8 @@
 #define UINPUT_DEV	"/dev/uinput"
 
 static struct uinput_user_dev uinput_dev;
+static unsigned long long acc_time_msec;
+static int acc_rate_msec = 100;
 static int uinput_fd = -1;
 
 /* */
@@ -119,12 +122,21 @@ static int send_event(int fd, uint16_t type, uint16_t code, int32_t value)
 
 void wii_handle_accelerometer(uint8_t x, uint8_t y, uint8_t z)
 {
-	//LOGV("Acc message [%d, %d, %d]\n", x, y, z);
+	unsigned long long new_time_msec;
+	struct timespec tick;
 
-	send_event(uinput_fd, EV_REL, REL_X, (uint32_t) x);
-	send_event(uinput_fd, EV_REL, REL_Y, (uint32_t) y);
-	send_event(uinput_fd, EV_REL, REL_Z, (uint32_t) z);
-	send_event(uinput_fd, EV_SYN, 0, 0);
+	clock_gettime(CLOCK_MONOTONIC, &tick);
+	new_time_msec = tick.tv_sec*1000 + tick.tv_nsec/1000000;
+
+	if (new_time_msec >= (acc_time_msec + acc_rate_msec)) {
+		acc_time_msec = new_time_msec;
+
+		send_event(uinput_fd, EV_REL, REL_X, (uint32_t) x);
+		send_event(uinput_fd, EV_REL, REL_Y, (uint32_t) y);
+		send_event(uinput_fd, EV_REL, REL_Z, (uint32_t) z);
+		send_event(uinput_fd, EV_SYN, 0, 0);
+	}
+
 }
 
 
