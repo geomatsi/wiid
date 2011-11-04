@@ -67,14 +67,6 @@ int main(int argc, char *argv[])
 
 	cwiid_set_err(err);
 
-	/* Connect to address given on command-line, if present */
-	if (argc > 1) {
-		str2ba(argv[1], &bdaddr);
-	}
-	else {
-		bdaddr = *BDADDR_ANY;
-	}
-
 	/* Init input subsystem */
 	if (0 > (rc = wii_input_init())) {
 		LOGE("Couldn't setup wii_input\n");
@@ -86,6 +78,17 @@ int main(int argc, char *argv[])
 		LOGE("Couldn't setup wii_acc\n");
 		exit(-1);
 	}
+
+start:
+	/* Connect to address given on command-line, if present */
+
+	if (argc > 1) {
+		str2ba(argv[1], &bdaddr);
+	}
+	else {
+		bdaddr = *BDADDR_ANY;
+	}
+
 
 	/* Connect to the wiimote */
 	while (1) {
@@ -118,27 +121,34 @@ int main(int argc, char *argv[])
 
 	do {
 		toggle_bit(led_state, CWIID_LED1_ON);
-		set_led_state(wiimote, led_state);
+		if (set_led_state(wiimote, led_state))
+			break;
 		sleep(1);
 
 		toggle_bit(led_state, CWIID_LED2_ON);
-		set_led_state(wiimote, led_state);
+		if (set_led_state(wiimote, led_state))
+			break;
 		sleep(1);
 
 		toggle_bit(led_state, CWIID_LED3_ON);
-		set_led_state(wiimote, led_state);
+		if (set_led_state(wiimote, led_state))
+			break;
 		sleep(1);
 
 		toggle_bit(led_state, CWIID_LED4_ON);
-		rc = set_led_state(wiimote, led_state);
+		if (set_led_state(wiimote, led_state))
+			break;
 		sleep(1);
 
-	} while (rc != -1);
+	} while (1);
 
 	if (cwiid_close(wiimote)) {
 		LOGE("Error on wiimote disconnect\n");
-		return -1;
 	}
+
+#if ANDROID
+	goto start;
+#endif
 
 	return 0;
 }
