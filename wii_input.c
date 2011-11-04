@@ -18,10 +18,12 @@
 
 #define LOG_TAG "wiid_input"
 #define LOG_NDEBUG 0
+
 #include <cutils/log.h>
 
 #else
 
+#include <linux/input.h>
 #include <wii_log.h>
 
 #endif /* ANDROID */
@@ -131,8 +133,15 @@ void wii_handle_buttons(uint16_t btn)
 {
 	char key;
 
-	LOGV("buttons = %.4X\n", btn);
 	/* FIXME: simple mapping */
+
+#if ANDROID
+
+	/*
+	 * This is just scan code to scan code translation:
+	 * we can't exceed android scan code length.
+	 * For actual mapping see: device/ti/beagleboard/Wii_Keypad.kl
+	 */
 
 	switch(btn) {
 	case 0x0010:
@@ -167,6 +176,46 @@ void wii_handle_buttons(uint16_t btn)
 		break;
 
 	}
+
+#else	/* LINUX */
+
+	/* In Linux we inject key events according to /usr/include/linux/input.h */
+
+	switch(btn) {
+	case 0x0010:
+		key = KEY_9;
+		break;
+	case 0x1000:
+		key = KEY_0;
+		break;
+	case 0x0080:
+		key = KEY_HOME;
+		break;
+	case 0x0008:
+		key = KEY_BACKSPACE;
+		break;
+	case 0x0004:
+		key = KEY_ENTER;
+		break;
+	case 0x0200:
+		key = KEY_RIGHT;
+		break;
+	case 0x0100:
+		key = KEY_LEFT;
+		break;
+	case 0x0400:
+		key = KEY_DOWN;
+		break;
+	case 0x0800:
+		key = KEY_UP;
+		break;
+	default:
+		key = 0;
+		break;
+
+	}
+
+#endif	/* ANDROID */
 
 	uinput_click(uinput_fd, key);
 }
