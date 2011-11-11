@@ -217,5 +217,6 @@ void wii_handle_buttons(uint16_t btn)
 
 #endif	/* ANDROID */
 
+	LOGD("press key %d\n", key);
 	uinput_click(uinput_fd, key);
 }

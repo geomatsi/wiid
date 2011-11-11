@@ -25,10 +25,8 @@ cwiid_mesg_callback_t cwiid_callback;
 
 #define CONNECT_TIMEOUT 2
 
-#define toggle_bit(bf,b)	\
-	(bf) = ((bf) & b)		\
-	       ? ((bf) & ~(b))	\
-	       : ((bf) | (b))
+#define toggle_bit(bf,b)	(bf) = ((bf) & b) ? ((bf) & ~(b)) : ((bf) | (b))
+#define set_bit(bf, b) 		(bf) = ((bf) | (b))
 
 int set_led_state(cwiid_wiimote_t *wiimote, unsigned char led_state);
 void set_rpt_mode(cwiid_wiimote_t *wiimote, unsigned char rpt_mode);
@@ -112,11 +110,11 @@ start:
 	}
 
 	/* toggle buttons info */
-	toggle_bit(rpt_mode, CWIID_RPT_BTN);
+	set_bit(rpt_mode, CWIID_RPT_BTN);
 	set_rpt_mode(wiimote, rpt_mode);
 
 	/* toggle acc info */
-	toggle_bit(rpt_mode, CWIID_RPT_ACC);
+	set_bit(rpt_mode, CWIID_RPT_ACC);
 	set_rpt_mode(wiimote, rpt_mode);
 
 	do {
@@ -146,7 +144,7 @@ start:
 		LOGE("Error on wiimote disconnect\n");
 	}
 
-#if ANDROID
+#ifdef ANDROID
 	goto start;
 #endif
 
@@ -360,11 +358,7 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
 			       mesg[i].motionplus_mesg.low_speed[2]);
 			break;
 		case CWIID_MESG_ERROR:
-			if (cwiid_close(wiimote)) {
-				LOGE("Error on wiimote disconnect\n");
-				exit(-1);
-			}
-			exit(0);
+			LOGE("Error on wiimote disconnect\n");
 			break;
 		default:
 			LOGE("Unknown Report");
